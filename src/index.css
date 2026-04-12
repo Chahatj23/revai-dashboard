@@ -1,13 +1,242 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base Neutral Colors (Stockpilot) */
+    --background: 220 20% 98%;
+    --foreground: 220 20% 15%;
+    
+    --muted: 220 20% 94%;
+    --muted-foreground: 220 15% 45%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 15%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 15%;
+    
+    --border: 220 20% 90%;
+    --input: 220 20% 92%;
+    
+    /* Studio Action Colors (RevAI Indigo Bridge) */
+    --primary: 236 80% 60%;
+    --primary-foreground: 236 80% 98%;
+    
+    --secondary: 220 20% 94%;
+    --secondary-foreground: 220 20% 30%;
+    
+    --accent: 260 70% 60%;
+    --accent-foreground: 260 20% 98%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --ring: 236 80% 60%;
+    --radius: 0.75rem;
+
+    /* Sidebar - Deep Glass (Studio) */
+    --sidebar-background: 220 20% 12%;
+    --sidebar-foreground: 220 15% 85%;
+    --sidebar-primary: 236 80% 60%;
+    --sidebar-primary-foreground: 236 80% 98%;
+    --sidebar-accent: 220 20% 20%;
+    --sidebar-accent-foreground: 220 15% 95%;
+    --sidebar-border: 220 20% 18%;
+    --sidebar-ring: 236 80% 60%;
+  }
+
+  .dark {
+    --background: 220 40% 3%;
+    --foreground: 220 15% 98%;
+    
+    --muted: 220 15% 10%;
+    --muted-foreground: 220 15% 85%;
+    
+    --popover: 220 20% 5%;
+    --popover-foreground: 220 15% 98%;
+    
+    --card: 220 20% 6%;
+    --card-foreground: 220 15% 98%;
+    
+    --border: 220 15% 12%;
+    --input: 220 15% 14%;
+    
+    --primary: 236 100% 70%;
+    --primary-foreground: 236 80% 98%;
+    
+    --secondary: 220 15% 12%;
+    --secondary-foreground: 220 15% 98%;
+    
+    --accent: 260 100% 70%;
+    --accent-foreground: 260 15% 98%;
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer base {
+  * {
+    @apply border-border;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-background text-foreground selection:bg-primary/30 selection:text-white;
+    font-family: 'Inter', 'Outfit', sans-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* --- Studio Global Utilities --- */
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+}
+
+.dark .glass-panel {
+  background: rgba(10, 15, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.studio-card {
+  @apply rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-300;
+  border: 1px solid var(--border);
+}
+
+.studio-card:hover {
+  @apply shadow-md;
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+/* Typography Polish */
+h1, h2, h3, h4 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* --- Layout Structure --- */
+
+.crm-dashboard {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.pro-layout-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 2rem;
+}
+
+.pro-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  position: sticky;
+  top: 2rem;
+}
+
+/* Kanban System (RevAI CRM Original) */
+.kanban-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.kanban-column {
+  @apply bg-muted/50 rounded-2xl p-4 min-h-[600px];
+  border: 1px solid var(--border);
+}
+
+.column-header {
+  @apply flex justify-between items-center mb-6 px-2;
+}
+
+.kanban-card {
+  @apply bg-card p-5 rounded-xl shadow-sm mb-4 cursor-pointer transition-all duration-200;
+  border: 1px solid var(--border);
+}
+
+.kanban-card:hover {
+  @apply shadow-lg border-primary/50;
+  transform: scale(1.02);
+}
+
+.kanban-card.is-dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+/* Badge System */
+.smart-badges {
+  @apply flex flex-wrap gap-2 my-4;
+}
+
+.smart-badge {
+  @apply px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider shadow-sm;
+}
+
+.badge-fire { @apply bg-red-100 text-red-600 dark:bg-red-950/30 dark:text-red-400; }
+.badge-intent { @apply bg-indigo-100 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400; }
+.badge-money { @apply bg-emerald-100 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400; }
+
+/* AI Agent Interface */
+.ai-agent-container {
+  @apply glass-panel mt-12 p-8 border rounded-2xl shadow-xl;
+  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
+}
+
+.dark .ai-agent-container {
+  background: linear-gradient(135deg, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0.6) 100%);
+}
+
+.agent-input {
+  @apply bg-background border-2 border-muted rounded-xl px-5 py-3 transition-all outline-none;
+}
+
+.agent-input:focus {
+  @apply border-primary ring-4 ring-primary/10;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Global Transitions */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Scrollbar Polish */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
