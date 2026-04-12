@@ -13,9 +13,9 @@ import {
   CardTitle,
   CardDescription,
 } from "../ui/Card";
-import { ArrowUpDown, TrendingUp, BarChartHorizontalBig } from "lucide-react";
+import { ArrowUpDown, TrendingUp } from "lucide-react";
 import { Skeleton } from "../ui/Skeleton";
-
+import { useState, useMemo } from "react";
 const BestSellingProductsTable = ({ data, isLoading }) => {
   const [sortConfig, setSortConfig] = useState({
     key: "totalRevenueGenerated",
