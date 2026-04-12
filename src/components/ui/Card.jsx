@@ -15,8 +15,10 @@ export const CardHeader = ({ className, ...props }) => (
   <div className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
 );
 
-export const CardTitle = ({ className, ...props }) => (
-  <h3 className={cn('font-bold leading-none tracking-tight text-xl', className)} {...props} />
+export const CardTitle = ({ className, children, ...props }) => (
+  <h3 className={cn('font-bold leading-none tracking-tight text-xl', className)} {...props}>
+    {children}
+  </h3>
 );
 
 export const CardDescription = ({ className, ...props }) => (
