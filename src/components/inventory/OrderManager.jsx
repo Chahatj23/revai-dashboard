@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { Button } from '../ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/Table';
 import { Input } from '../ui/Input';
-import { ShoppingCart, ExternalLink, Clock, CheckCircle2, AlertCircle, Plus, Search, X } from 'lucide-react';
+import { ShoppingCart, ExternalLink, Clock, CheckCircle2, AlertCircle, Plus, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const OrderManager = () => {

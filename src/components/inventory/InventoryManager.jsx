@@ -3,17 +3,16 @@ import Papa from 'papaparse';
 import { useProducts } from '../../contexts/ProductContext';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
+import { Card, CardContent, CardHeader } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Skeleton } from '../ui/Skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/Table';
-import { Package, Search, Filter, Trash2, Download, Upload, Plus, ChevronRight, Edit3 } from 'lucide-react';
+import { Package, Search, Trash2, Download, Upload, Plus, ChevronRight, Edit3 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Link } from 'react-router-dom';
 
 const InventoryManager = () => {
-  const { currentUser } = useAuth();
   const { products, loading, deleteProduct, bulkDeleteProducts, importProducts } = useProducts();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -45,7 +44,6 @@ const InventoryManager = () => {
   };
 
   const handleExport = () => {
-    const token = localStorage.getItem('token');
     window.open(`http://localhost:5000/api/inventory/products/export`, '_blank');
   };
 

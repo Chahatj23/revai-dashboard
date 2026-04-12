@@ -1,9 +1,9 @@
 import React from 'react';
 import { usePromotions } from '../../contexts/PromotionContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/Table';
-import { Percent, Calendar, Tag, Plus, CheckCircle2, XCircle } from 'lucide-react';
+import { Percent, Tag, Plus } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const PromotionManager = () => {

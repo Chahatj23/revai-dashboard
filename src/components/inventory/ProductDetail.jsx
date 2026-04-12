@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { inventoryApi } from '../../services/inventoryApi';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
 import { 
-  Package, 
-  ArrowLeft, 
   TrendingUp, 
   History, 
   Settings2, 
   QrCode, 
   Activity, 
-  Box, 
   AlertTriangle,
   ChevronRight,
   Database,
@@ -24,7 +21,6 @@ import { cn } from '../../lib/utils';
 const ProductDetail = () => {
   const { id } = useParams();
   const { currentUser } = useAuth();
-  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
