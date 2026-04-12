@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
-import { getLeads, updateLeadPriority } from "../../services/api";
+import { useParams, useNavigate } from "react-router-dom";
+import { getLeads, getDeals, seedDemoData, updateLeadPriority } from "../../services/api";
+import { toast } from "sonner";
 import axios from "axios";
 import LeadChart from "../LeadChart";
 import InsightsStrip from "../InsightsStrip";
@@ -14,7 +16,10 @@ import { Button } from "../ui/Button";
 import { cn } from "../../lib/utils";
 
 const CRMDashboard = ({ showPipelineOnly = false }) => {
+  const { orgId } = useParams();
+  const navigate = useNavigate();
   const [leads, setLeads] = useState([]);
+  const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState(null);
   
@@ -29,8 +34,12 @@ const CRMDashboard = ({ showPipelineOnly = false }) => {
 
   const fetchLeads = useCallback(async () => {
     try {
-      const res = await getLeads();
-      setLeads(res.data);
+      const [leadsRes, dealsRes] = await Promise.all([
+        getLeads(),
+        getDeals()
+      ]);
+      setLeads(leadsRes.data);
+      setDeals(dealsRes.data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -85,6 +94,17 @@ const CRMDashboard = ({ showPipelineOnly = false }) => {
             <p className="subtitle text-muted-foreground font-medium">Real-time business analytics and AI forecasting</p>
           </div>
           <div className="flex gap-3">
+            <Button variant="outline" size="sm" onClick={async () => {
+              try {
+                await seedDemoData();
+                fetchLeads();
+                toast.success("Environment seeded successfully.");
+              } catch (e) {
+                toast.error("Seeding parity error.");
+              }
+            }}>
+              Seed Sample Data
+            </Button>
             <Button variant="outline" size="sm">
               Generate Report
             </Button>
@@ -106,10 +126,10 @@ const CRMDashboard = ({ showPipelineOnly = false }) => {
         ) : (
           <div className="w-full max-w-[1600px] mx-auto space-y-10">
             {/* Main Stage - Full Width Now */}
-            {!showPipelineOnly && <InsightsStrip leads={leads} />}
+            {!showPipelineOnly && <InsightsStrip leads={leads} deals={deals} />}
             <div className="grid gap-8">
               {!showPipelineOnly && <LeadChart leads={leads} />}
-              <PipelineKanban leads={leads} onLeadClick={setSelectedLead} onLeadDrop={handleLeadDrop} />
+              <PipelineKanban leads={leads} onLeadClick={(lead) => navigate(`/org/${orgId}/leads/${lead.id}`)} onLeadDrop={handleLeadDrop} />
             </div>
 
             {/* Widgets Section - Moved Downwards */}

@@ -2,12 +2,18 @@ import React from 'react';
 import { Card, CardContent } from './ui/Card';
 import { TrendingUp, Zap, Briefcase, AlertCircle, ArrowUpRight } from 'lucide-react';
 
-const InsightsStrip = ({ leads }) => {
-  const totalValue = leads.reduce((sum, lead) => sum + (lead.expected_deal_size || 0), 0);
+const InsightsStrip = ({ leads = [], deals = [] }) => {
+  // Use deals as primary source for pipeline value if available, else fallback to leads
+  const pipelineSource = deals.length > 0 ? deals : leads;
+  const totalValue = pipelineSource.reduce((sum, item) => sum + (Number(item.value || item.expected_deal_size) || 0), 0);
+  
   const avgProbability = leads.length > 0 
     ? Math.round(leads.reduce((sum, lead) => sum + (lead.conversion_probability || 0), 0) / leads.length) 
     : 0;
-  const activeDeals = leads.filter(l => l.status !== 'Closed').length;
+  
+  const activeDeals = deals.length > 0 
+    ? deals.filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost').length 
+    : leads.filter(l => l.status !== 'Closed').length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -47,7 +47,9 @@ const ExecutiveReports = () => {
     );
   }
 
-  const sourceData = Object.entries(data?.leadStats?.bySource || {}).map(([name, value]) => ({ name, value }));
+  const sourceData = Object.entries(data?.leadStats?.bySource || {}).length > 0 
+    ? Object.entries(data?.leadStats?.bySource).map(([name, value]) => ({ name, value }))
+    : [{ name: 'Collecting Data...', value: 1 }];
 
   return (
     <div className="p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24 max-w-7xl mx-auto">

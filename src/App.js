@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
-import { Toaster } from "sonner";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate, useParams, useNavigate } from "react-router-dom";
+import { Toaster, toast } from "sonner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProductProvider } from "./contexts/ProductContext";
 import { OrderProvider } from "./contexts/OrderContext";
@@ -12,6 +12,7 @@ import CRMDashboard from "./components/crm/CRMDashboard";
 import LeadManager from "./components/crm/LeadManager";
 import DealManager from "./components/crm/DealManager";
 import ExecutiveReports from "./components/crm/ExecutiveReports";
+import LeadDetailPage from "./components/crm/LeadDetailPage";
 import InventoryDashboard from "./components/inventory/InventoryDashboard";
 import InventoryManager from "./components/inventory/InventoryManager";
 import OrderManager from "./components/inventory/OrderManager";
@@ -35,24 +36,25 @@ import { cn } from "./lib/utils";
 function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const location = useLocation();
+  const { orgId } = useParams();
   const { logout, currentUser } = useAuth();
   
   const navItems = [
     { group: "Strategic Insights", items: [
-      { href: "/reports", label: "Executive Reports", icon: BarChart3 },
-      { href: "/inventory/recommendations", label: "Inventory Analysis", icon: Sparkles },
+      { href: `/org/${orgId}/reports`, label: "Executive Reports", icon: BarChart3 },
+      { href: `/org/${orgId}/inventory/recommendations`, label: "Inventory Analysis", icon: Sparkles },
     ]},
     { group: "Revenue Pipeline", items: [
-      { href: "/leads", label: "Lead Reservoir", icon: Zap },
-      { href: "/deals", label: "Deal Matrix", icon: Target },
-      { href: "/customers", label: "Customer Accounts", icon: Users },
-      { href: "/", label: "Revenue Health", icon: LayoutDashboard },
+      { href: `/org/${orgId}/leads`, label: "Lead Reservoir", icon: Zap },
+      { href: `/org/${orgId}/deals`, label: "Deal Matrix", icon: Target },
+      { href: `/org/${orgId}/customers`, label: "Customer Accounts", icon: Users },
+      { href: `/org/${orgId}/`, label: "Revenue Health", icon: LayoutDashboard },
     ]},
     { group: "Operations", items: [
-      { href: "/inventory", label: "Master Inventory", icon: Package },
-      { href: "/orders", label: "Trade Ledger", icon: ShoppingCart },
-      { href: "/inventory/simulate", label: "Demand Simulator", icon: Activity },
-      { href: "/integrations", label: "Systems Link", icon: Cable },
+      { href: `/org/${orgId}/inventory`, label: "Master Inventory", icon: Package },
+      { href: `/org/${orgId}/orders`, label: "Trade Ledger", icon: ShoppingCart },
+      { href: `/org/${orgId}/inventory/simulate`, label: "Demand Simulator", icon: Activity },
+      { href: `/org/${orgId}/integrations`, label: "Systems Link", icon: Cable },
     ]},
   ];
 
@@ -119,7 +121,7 @@ function Sidebar() {
       <div className="p-4 mt-auto border-t border-sidebar-border space-y-2 flex flex-col items-center">
         {isOpen ? (
             <Link 
-              to="/settings"
+              to={`/org/${orgId}/settings`}
               className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-sidebar-accent rounded-xl text-sm font-semibold transition-all text-muted-foreground hover:text-white"
             >
               <Settings size={18} className="shrink-0" />
@@ -127,7 +129,7 @@ function Sidebar() {
             </Link>
         ) : (
              <Link 
-              to="/settings"
+              to={`/org/${orgId}/settings`}
               className="flex justify-center p-3 w-full hover:bg-sidebar-accent rounded-xl text-muted-foreground hover:text-white"
             >
               <Settings size={18} />
@@ -162,6 +164,36 @@ function Sidebar() {
   );
 }
 
+
+// Synchronizes our AuthContext state with the URL organization ID
+function URLContextSynchronizer({ children }) {
+  const { orgId } = useParams();
+  const { currentUser, switchOrganization } = useAuth();
+  const [syncing, setSyncing] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && orgId && orgId !== currentUser.activeOrgId) {
+      setSyncing(true);
+      switchOrganization(orgId)
+        .catch(() => toast.error("Unauthorized access to organization data."))
+        .finally(() => setSyncing(false));
+    }
+  }, [orgId, currentUser, switchOrganization]);
+
+  if (syncing) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-black/40 backdrop-blur-md z-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">Relocating Resources...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
+}
+
 function App() {
   const { currentUser, loading } = useAuth();
 
@@ -185,43 +217,56 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
+        ) : !currentUser.activeOrgId ? (
+          <OrganizationSelector />
         ) : (
           <div className="flex min-h-screen">
-            <Sidebar />
-            <main className="flex-1 overflow-x-auto relative min-w-0">
-               {!currentUser.activeOrgId && <OrganizationSelector />}
-               <LeadProvider>
-                 <DealProvider>
-                    <ProductProvider>
-                      <OrderProvider>
-                        <PromotionProvider>
-                          <CustomerProvider>
-                            <Routes>
-                              <Route path="/" element={<CRMDashboard />} />
-                              <Route path="/reports" element={<ExecutiveReports />} />
-                              <Route path="/leads" element={<LeadManager />} />
-                              <Route path="/deals" element={<DealManager />} />
-                              <Route path="/inventory" element={<InventoryDashboard />} />
-                              <Route path="/inventory/manage" element={<InventoryManager />} />
-                              <Route path="/inventory/simulate" element={<RestockSimulator />} />
-                              <Route path="/orders" element={<OrderManager />} />
-                              <Route path="/promotions" element={<PromotionManager />} />
-                              <Route path="/inventory/recommendations" element={<AIRecommendations />} />
-                              <Route path="/integrations" element={<IntegrationHub />} />
-                              <Route path="/customers" element={<CustomerManager />} />
-                              <Route path="/settings" element={<SettingsPage />} />
-                              <Route path="/pipeline" element={<CRMDashboard showPipelineOnly={true} />} />
-                              <Route path="/products/add" element={<AddProduct />} />
-                              <Route path="/products/:id" element={<ProductDetail />} />
-                              <Route path="*" element={<Navigate to="/" replace />} />
-                            </Routes>
-                          </CustomerProvider>
-                        </PromotionProvider>
-                      </OrderProvider>
-                    </ProductProvider>
-                 </DealProvider>
-               </LeadProvider>
-            </main>
+            <Routes>
+              {/* Parameterized Route Wrapper */}
+              <Route path="/org/:orgId/*" element={
+                <URLContextSynchronizer>
+                  <div className="flex w-full min-h-screen">
+                    <Sidebar />
+                    <main className="flex-1 overflow-x-auto relative min-w-0">
+                      <LeadProvider>
+                        <DealProvider>
+                          <ProductProvider>
+                            <OrderProvider>
+                              <PromotionProvider>
+                                <CustomerProvider>
+                                  <Routes>
+                                    <Route path="/" element={<CRMDashboard />} />
+                                    <Route path="/reports" element={<ExecutiveReports />} />
+                                    <Route path="/leads" element={<LeadManager />} />
+                                    <Route path="/leads/:id" element={<LeadDetailPage />} />
+                                    <Route path="/deals" element={<DealManager />} />
+                                    <Route path="/inventory" element={<InventoryDashboard />} />
+                                    <Route path="/inventory/manage" element={<InventoryManager />} />
+                                    <Route path="/inventory/simulate" element={<RestockSimulator />} />
+                                    <Route path="/orders" element={<OrderManager />} />
+                                    <Route path="/promotions" element={<PromotionManager />} />
+                                    <Route path="/inventory/recommendations" element={<AIRecommendations />} />
+                                    <Route path="/integrations" element={<IntegrationHub />} />
+                                    <Route path="/customers" element={<CustomerManager />} />
+                                    <Route path="/settings" element={<SettingsPage />} />
+                                    <Route path="/pipeline" element={<CRMDashboard showPipelineOnly={true} />} />
+                                    <Route path="/products/add" element={<AddProduct />} />
+                                    <Route path="/products/:id" element={<ProductDetail />} />
+                                    <Route path="*" element={<Navigate to="/" replace />} />
+                                  </Routes>
+                                </CustomerProvider>
+                              </PromotionProvider>
+                            </OrderProvider>
+                          </ProductProvider>
+                        </DealProvider>
+                      </LeadProvider>
+                    </main>
+                  </div>
+                </URLContextSynchronizer>
+              } />
+              {/* Default redirect for legacy links */}
+              <Route path="*" element={<Navigate to={`/org/${currentUser.activeOrgId}/`} replace />} />
+            </Routes>
           </div>
         )}
       </div>

@@ -23,6 +23,10 @@ export const createLead = (payload) => API.post("/leads/score", payload);
 export const updateLead = (id, payload) => API.put(`/leads/${id}`, payload);
 export const deleteLead = (id) => API.delete(`/leads/${id}`);
 
+// CRM Suite Additions
+export const getDeals = () => API.get("/deals");
+export const seedDemoData = () => API.post("/crm/seed");
+
 // Task CRUD hooks
 export const createTask = (subject, priority) => API.post("/tasks", { subject, priority });
 export const updateTask = (id, payload) => API.put(`/tasks/${id}`, payload);

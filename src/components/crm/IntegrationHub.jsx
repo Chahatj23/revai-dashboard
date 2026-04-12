@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { Button } from '../ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { integrationApi } from '../../services/integrationApi';
+import axios from "axios";
 import { Cable, CheckCircle2, RefreshCw, Settings2, Plus, ArrowRight, Cloud, LayoutGrid, Slack } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import IntegrationSettingsModal from './IntegrationSettingsModal';
@@ -15,11 +16,20 @@ const IntegrationHub = () => {
   const [syncingId, setSyncingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState({ connected: false });
+  const [crmLeads, setCrmLeads] = useState([]);
+  const [isSyncingLeads, setIsSyncingLeads] = useState(false);
 
   const fetchIntegrations = async () => {
     try {
-      const res = await integrationApi.getIntegrations();
-      setIntegrations(res.data);
+      const [intRes, statusRes] = await Promise.all([
+        integrationApi.getIntegrations(),
+        axios.get("http://localhost:5000/api/integrations/status", {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        })
+      ]);
+      setIntegrations(intRes.data);
+      setConnectionStatus(statusRes.data);
     } catch (err) {
       console.error("Failed to fetch integrations", err);
       toast.error("Cloud synchronization failed");
@@ -47,13 +57,47 @@ const IntegrationHub = () => {
     }
   };
 
-  const handleOpenSettings = (integration) => {
-    setSelectedIntegration(integration);
-    setIsModalOpen(true);
+  const handleOpenSettings = async (integration) => {
+    if (integration.name.toLowerCase() === 'salesforce') {
+      const toastId = toast.loading("Preparing Salesforce handshake...");
+      try {
+        const res = await axios.get("http://localhost:5000/api/integrations/salesforce/connect", {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        window.location.href = res.data.authUrl;
+      } catch (err) {
+        toast.error("Handshake failed: Check server connection", { id: toastId });
+      }
+    } else {
+      setSelectedIntegration(integration);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleSyncLeads = async () => {
+    setIsSyncingLeads(true);
+    const toastId = toast.loading("Fetching live CRM leads...");
+    try {
+      const res = await axios.get("http://localhost:5000/api/integrations/salesforce/leads", {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setCrmLeads(res.data);
+      toast.success(`Fetched ${res.data.length} leads`, { id: toastId });
+    } catch (err) {
+      toast.error("Lead sync failed", { id: toastId });
+    } finally {
+      setIsSyncingLeads(false);
+    }
   };
 
   const handleSaveSettings = async (id, config) => {
     try {
+      if (config.authMethod === 'oauth') {
+        const res = await integrationApi.getSalesforceAuthUrl(config.clientId, config.clientSecret);
+        window.location.href = res.data.authUrl;
+        return;
+      }
+
       await integrationApi.updateIntegration(id, { 
         status: 'connected', 
         config 
@@ -107,7 +151,7 @@ const IntegrationHub = () => {
           integrations.map((item) => (
             <Card key={item._id} className={cn(
               "glass-panel border-none shadow-2xc transition-all duration-500 hover:-translate-y-2 group overflow-hidden",
-              item.status === 'connected' ? "ring-1 ring-primary/20" : "opacity-80"
+              (item.status === 'connected' || (item.name === 'Salesforce' && connectionStatus.connected)) ? "ring-1 ring-primary/20" : "opacity-80"
             )}>
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                  <Cable className="h-24 w-24 -rotate-12" />
@@ -119,11 +163,11 @@ const IntegrationHub = () => {
                   </div>
                   <div className={cn(
                     "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.1em] border",
-                    item.status === 'connected' 
+                    (item.status === 'connected' || (item.name === 'Salesforce' && connectionStatus.connected)) 
                       ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
                       : "bg-muted/10 text-muted-foreground border-white/5"
                   )}>
-                    {item.status === 'connected' ? "Active Node" : "Deactivated"}
+                    {(item.status === 'connected' || (item.name === 'Salesforce' && connectionStatus.connected)) ? "Active Node" : "Deactivated"}
                   </div>
                 </div>
                 <CardTitle className="text-2xl font-black text-white mt-6">{item.name}</CardTitle>
@@ -131,27 +175,27 @@ const IntegrationHub = () => {
               </CardHeader>
               <CardContent className="space-y-6 pt-4">
                 <div className="flex items-center justify-between gap-4">
-                  {item.status === 'connected' ? (
+                  {(item.status === 'connected' || (item.name === 'Salesforce' && connectionStatus.connected)) ? (
                     <Button variant="outline" className="flex-1 glass-panel border-primary/20 h-11 text-[10px] font-black uppercase" onClick={() => handleSync(item._id)} disabled={syncingId === item._id}>
                       {syncingId === item._id ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
                       Sync Logic
                     </Button>
                   ) : (
                     <Button className="flex-1 h-11 text-[10px] font-black uppercase shadow-lg shadow-primary/20" onClick={() => handleOpenSettings(item)}>
-                      Establish Link
+                      {item.name === 'Salesforce' ? 'Connect Salesforce' : 'Establish Link'}
                     </Button>
                   )}
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     className="h-11 w-11 glass-panel border-white/5 hover:bg-white/10"
-                    onClick={() => item.status === 'connected' ? handleDisconnect(item) : handleOpenSettings(item)}
+                    onClick={() => (item.status === 'connected' || (item.name === 'Salesforce' && connectionStatus.connected)) ? handleDisconnect(item) : handleOpenSettings(item)}
                   >
                     <Settings2 className="h-4 w-4" />
                   </Button>
                 </div>
                 
-                {item.status === 'connected' && (
+                {(item.status === 'connected' || (item.name === 'Salesforce' && connectionStatus.connected)) && (
                   <div className="pt-2 flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
                     <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                     Secure Connection Established
@@ -162,6 +206,35 @@ const IntegrationHub = () => {
           ))
         )}
       </div>
+
+      {crmLeads.length > 0 && (
+        <section className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex justify-between items-center px-2">
+            <h2 className="text-xl font-bold text-white tracking-tight">Live CRM Sync Results</h2>
+            <Button variant="ghost" className="text-[10px] uppercase font-black tracking-widest" onClick={() => setCrmLeads([])}>Clear View</Button>
+          </div>
+          <div className="glass-panel overflow-hidden border-none shadow-2xl">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/5">
+                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Name</th>
+                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</th>
+                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Company</th>
+                </tr>
+              </thead>
+              <tbody>
+                {crmLeads.map((lead, i) => (
+                  <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="p-4 text-sm font-bold text-white">{lead.Name}</td>
+                    <td className="p-4 text-sm text-muted-foreground">{lead.Email || 'No Email'}</td>
+                    <td className="p-4 text-sm text-muted-foreground uppercase tracking-wider font-medium">{lead.Company}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       <section className="pt-10">
         <Card className="glass-panel border-none bg-primary/5 p-10 overflow-hidden relative">
@@ -178,6 +251,12 @@ const IntegrationHub = () => {
                Our bi-directional sync ensures your Salesforce or HubSpot instance stays up-to-date with RevAI's predictive insights.
              </p>
              <div className="flex gap-4 pt-4">
+               {connectionStatus.connected && (
+                 <Button onClick={handleSyncLeads} disabled={isSyncingLeads} className="h-14 px-8 shadow-2xl shadow-primary/30 font-black uppercase tracking-widest text-xs">
+                   {isSyncingLeads ? <RefreshCw className="mr-3 h-5 w-5 animate-spin" /> : <RefreshCw className="mr-3 h-5 w-5" />}
+                   Sync Leads (Live)
+                 </Button>
+               )}
                <Button variant="link" className="text-primary font-black uppercase tracking-widest text-[10px] p-0 flex items-center gap-2 group">
                  Review API Docs <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                </Button>

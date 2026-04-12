@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { LayoutDashboard, Mail, Lock, Building2, ArrowRight, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Mail, Lock, Building2, ArrowRight, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const LoginPage = () => {
@@ -15,6 +15,7 @@ const LoginPage = () => {
     companyName: ''
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -126,16 +127,23 @@ const LoginPage = () => {
               <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1 group-focus-within:text-primary transition-colors">
                 Access Password
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20 group-focus-within:text-primary transition-colors" />
                 <Input 
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••" 
-                  className="h-14 pl-12 glass-panel border-white/5 bg-white/[0.02] focus:bg-white/[0.05]"
+                  className="h-14 pl-12 pr-12 glass-panel border-white/5 bg-white/[0.02] focus:bg-white/[0.05]"
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
 

@@ -9,11 +9,12 @@ import { Input } from '../ui/Input';
 import { 
   Users, UserPlus, Search, Mail, Phone, MapPin, MoreVertical, 
   Trash2, Edit, Download, Upload, ArrowUpDown, Filter, CheckCircle2, 
-  Calendar, Globe, BadgeCheck, ShieldCheck 
+  Calendar, Globe, BadgeCheck, ShieldCheck, History, ShoppingCart
 } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../ui/Table';
 import { Skeleton } from '../ui/Skeleton';
 import { cn } from '../../lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/Dialog';
 
 const CustomerManager = () => {
   const { customers, loading, addCustomer, deleteCustomer, updateCustomer, deleteMultipleCustomers, importCustomers } = useCustomers();
@@ -33,6 +34,9 @@ const CustomerManager = () => {
     address: '',
     company: ''
   });
+
+  const [selectedHistoryCustomer, setSelectedHistoryCustomer] = useState(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const getSourceIcon = (source) => {
     switch (source?.toLowerCase()) {
@@ -235,6 +239,7 @@ const CustomerManager = () => {
                     </TableCell>
                     <TableCell className="text-right pr-8">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" onClick={() => { setSelectedHistoryCustomer(customer); setHistoryOpen(true); }} className="w-9 h-9 rounded-lg hover:bg-white/10 text-primary"><History className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => startEdit(customer)} className="w-9 h-9 rounded-lg hover:bg-white/10"><Edit className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => deleteCustomer(customer.id)} className="w-9 h-9 rounded-lg hover:bg-red-500/10 text-red-400"><Trash2 className="h-4 w-4" /></Button>
                        </div>
@@ -246,6 +251,47 @@ const CustomerManager = () => {
           </Table>
         </Card>
       </div>
+      {/* Transaction History Modal */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-3xl glass-panel border-white/5 bg-black/90 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black flex items-center gap-3">
+              <History className="h-6 w-6 text-primary" />
+              Sales History: {selectedHistoryCustomer?.name}
+            </DialogTitle>
+            <DialogDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Cross-referencing customer email with transaction ledger
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="mt-6 space-y-4">
+            {sales.filter(o => o.customerEmail === selectedHistoryCustomer?.email).length === 0 ? (
+              <div className="p-10 text-center border-2 border-dashed border-white/5 rounded-2xl">
+                <ShoppingCart className="h-12 w-12 text-white/5 mx-auto mb-4" />
+                <p className="text-muted-foreground font-bold italic">No transaction records found for this account.</p>
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                {sales.filter(o => o.customerEmail === selectedHistoryCustomer?.email).map(order => (
+                  <div key={order.id} className="p-4 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center group hover:bg-white/10 transition-all">
+                    <div className="space-y-1">
+                      <div className="text-xs font-black uppercase tracking-widest text-primary">{order.orderNumber}</div>
+                      <div className="text-lg font-bold text-white">${Number(order.totalAmount).toLocaleString()}</div>
+                      <div className="text-[10px] font-bold text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()} • {order.items?.length || 0} Items</div>
+                    </div>
+                    <div className={cn(
+                      "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border",
+                      order.paymentStatus === 'paid' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                    )}>
+                      {order.paymentStatus}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -11,6 +12,8 @@ import LeadModal from '../LeadModal';
 import { toast } from 'sonner';
 
 const LeadManager = () => {
+  const { orgId } = useParams();
+  const navigate = useNavigate();
   const { leads, loading, fetchLeads, updatePriority, deleteLead } = useLeads();
   const { addDeal } = useDeals();
   const [searchTerm, setSearchTerm] = useState('');
@@ -135,7 +138,7 @@ const LeadManager = () => {
                  </TableRow>
               ) : (
                 filteredLeads.map((lead) => (
-                  <TableRow key={lead.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group">
+                  <TableRow key={lead.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => navigate(`/org/${orgId}/leads/${lead.id}`)}>
                     <TableCell className="py-6">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center font-black text-primary border border-primary/20">
