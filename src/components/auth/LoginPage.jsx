@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
+
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { LayoutDashboard, Mail, Lock, Building2, ArrowRight, Sparkles, Eye, EyeOff } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { Mail, Lock, Building2, ArrowRight, Sparkles, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
   const { login, signup, error: authError } = useAuth();
@@ -15,10 +14,14 @@ const LoginPage = () => {
     companyName: ''
   });
   const [loading, setLoading] = useState(false);
+  const isSubmitting = useRef(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting.current) return;
+    
+    isSubmitting.current = true;
     setLoading(true);
     try {
       if (isLogin) {
@@ -30,6 +33,7 @@ const LoginPage = () => {
       // Error handled by AuthContext
     } finally {
       setLoading(false);
+      isSubmitting.current = false;
     }
   };
 

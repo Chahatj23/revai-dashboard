@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { inventoryApi } from '../../services/inventoryApi';
-import { Sparkles, Lightbulb, Loader2, ListChecks, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { Sparkles, Lightbulb, Loader2, ChevronRight, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AIRecommendations = () => {

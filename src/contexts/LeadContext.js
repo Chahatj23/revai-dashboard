@@ -1,39 +1,46 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext } from 'react';
 import axios from 'axios';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { API_BASE_URL } from '../config';
+import { useAuth } from './AuthContext';
 
 const LeadContext = createContext();
 
 export const useLeads = () => useContext(LeadContext);
 
 export const LeadProvider = ({ children }) => {
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { currentUser } = useAuth();
+  const queryClient = useQueryClient();
 
-  const fetchLeads = useCallback(async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/leads', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setLeads(res.data);
-    } catch (err) {
-      console.error("Failed to fetch leads", err);
-      toast.error("Lead synchronization failed");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchLeadsFn = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return [];
+    
+    const res = await axios.get(`${API_BASE_URL}/leads`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  };
+
+  const { 
+    data: leads = [], 
+    isLoading: loading, 
+    refetch: fetchLeads 
+  } = useQuery({
+    queryKey: ['leads', currentUser?.activeOrgId],
+    queryFn: fetchLeadsFn,
+    enabled: !!currentUser?.activeOrgId,
+  });
 
   const addLead = async (leadData) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('http://localhost:5000/api/leads/score', leadData, {
+      const res = await axios.post(`${API_BASE_URL}/leads/score`, leadData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success("Lead ingested and scored successfully");
-      fetchLeads();
+      queryClient.invalidateQueries(['leads', currentUser?.activeOrgId]);
       return res.data;
     } catch (err) {
       toast.error("Failed to ingest lead");
@@ -44,10 +51,10 @@ export const LeadProvider = ({ children }) => {
   const updatePriority = async (id, priority) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/leads/${id}/priority`, { priority }, {
+      await axios.put(`${API_BASE_URL}/leads/${id}/priority`, { priority }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLeads(prev => prev.map(l => l.id === id ? { ...l, priority } : l));
+      queryClient.invalidateQueries(['leads', currentUser?.activeOrgId]);
       toast.success(`Lead priority updated to ${priority}`);
     } catch (err) {
       toast.error("Failed to update priority");
@@ -57,10 +64,10 @@ export const LeadProvider = ({ children }) => {
   const deleteLead = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/leads/${id}`, {
+      await axios.delete(`${API_BASE_URL}/leads/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLeads(prev => prev.filter(l => l.id !== id));
+      queryClient.invalidateQueries(['leads', currentUser?.activeOrgId]);
       toast.success("Lead decommissioned");
     } catch (err) {
       toast.error("Failed to delete lead");

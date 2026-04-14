@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { INVENTORY_API_BASE_URL } from '../config';
+import { applyDedupe } from '../lib/dedupe';
 
-const API_BASE_URL = 'http://localhost:5000/api/inventory';
+const API_BASE_URL = INVENTORY_API_BASE_URL;
 
 // Create an instance with interceptors for auth
 const api = axios.create({
@@ -14,6 +16,8 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+applyDedupe(api);
 
 export const inventoryApi = {
   // Products

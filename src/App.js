@@ -7,9 +7,13 @@ import {
   useLocation,
   Navigate,
   useParams,
-  useNavigate,
 } from "react-router-dom";
 import { Toaster, toast } from "sonner";
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProductProvider } from "./contexts/ProductContext";
 import { OrderProvider } from "./contexts/OrderContext";
@@ -42,7 +46,6 @@ import {
   Settings,
   LogOut,
   ShoppingCart,
-  Percent,
   Sparkles,
   Cable,
   Zap,
@@ -54,6 +57,17 @@ import {
 } from "lucide-react";
 import { cn } from "./lib/utils";
 import { Analytics } from "@vercel/analytics/react";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes cache for "longer session"
+      cacheTime: 1000 * 60 * 10,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
@@ -450,9 +464,12 @@ function App() {
 // Wrap with providers at the very top level for App
 function AppWithProviders() {
   return (
-    <AuthProvider>
-      <App />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 

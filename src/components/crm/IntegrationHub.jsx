@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { useAuth } from '../../contexts/AuthContext';
 import { integrationApi } from '../../services/integrationApi';
 import axios from "axios";
-import { Cable, CheckCircle2, RefreshCw, Settings2, Plus, ArrowRight, Cloud, LayoutGrid, Slack } from 'lucide-react';
+import { Cable, CheckCircle2, RefreshCw, Settings2, Plus, Cloud, LayoutGrid, Slack, ArrowRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import IntegrationSettingsModal from './IntegrationSettingsModal';
 import { toast } from 'sonner';
+import { API_BASE_URL } from '../../config';
 
 const IntegrationHub = () => {
-  const { currentUser } = useAuth();
   const [integrations, setIntegrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncingId, setSyncingId] = useState(null);
@@ -24,7 +23,7 @@ const IntegrationHub = () => {
     try {
       const [intRes, statusRes] = await Promise.all([
         integrationApi.getIntegrations(),
-        axios.get("http://localhost:5000/api/integrations/status", {
+        axios.get(`${API_BASE_URL}/integrations/status`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
       ]);
@@ -61,7 +60,7 @@ const IntegrationHub = () => {
     if (integration.name.toLowerCase() === 'salesforce') {
       const toastId = toast.loading("Preparing Salesforce handshake...");
       try {
-        const res = await axios.get("http://localhost:5000/api/integrations/salesforce/connect", {
+        const res = await axios.get(`${API_BASE_URL}/integrations/salesforce/connect`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         window.location.href = res.data.authUrl;
@@ -78,7 +77,7 @@ const IntegrationHub = () => {
     setIsSyncingLeads(true);
     const toastId = toast.loading("Fetching live CRM leads...");
     try {
-      const res = await axios.get("http://localhost:5000/api/integrations/salesforce/leads", {
+      const res = await axios.get(`${API_BASE_URL}/integrations/salesforce/leads`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setCrmLeads(res.data);

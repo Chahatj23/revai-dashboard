@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
+
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { Building2, ArrowRight, UserCircle2, Plus, X, Check } from 'lucide-react';
+import { Building2, ArrowRight, UserCircle2, Plus, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const OrganizationSelector = () => {

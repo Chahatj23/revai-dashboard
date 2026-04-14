@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getLeads, getDeals, seedDemoData, updateLeadPriority } from "../../services/api";
 import { toast } from "sonner";
 import axios from "axios";
+import { API_BASE_URL } from "../../config";
 import LeadChart from "../LeadChart";
 import InsightsStrip from "../InsightsStrip";
 import TodayFocus from "../TodayFocus";
@@ -22,6 +23,7 @@ const CRMDashboard = ({ showPipelineOnly = false }) => {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState(null);
+  const isActionPending = useRef(false);
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,6 +35,8 @@ const CRMDashboard = ({ showPipelineOnly = false }) => {
   const [agentLoading, setAgentLoading] = useState(false);
 
   const fetchLeads = useCallback(async () => {
+    if (isActionPending.current) return;
+    isActionPending.current = true;
     try {
       const [leadsRes, dealsRes] = await Promise.all([
         getLeads(),
@@ -44,6 +48,7 @@ const CRMDashboard = ({ showPipelineOnly = false }) => {
       console.error(e);
     } finally {
       setLoading(false);
+      isActionPending.current = false;
     }
   }, []);
 
@@ -51,8 +56,28 @@ const CRMDashboard = ({ showPipelineOnly = false }) => {
     fetchLeads();
   }, [fetchLeads]);
 
+  const handleSeedData = async () => {
+    if (isActionPending.current) return;
+    isActionPending.current = true;
+    try {
+      await seedDemoData();
+      // Directly call fetch logic without the ref check here to ensure refresh
+      const [leadsRes, dealsRes] = await Promise.all([
+        getLeads(),
+        getDeals()
+      ]);
+      setLeads(leadsRes.data);
+      setDeals(dealsRes.data);
+      toast.success("Environment seeded successfully.");
+    } catch (e) {
+      toast.error("Seeding parity error.");
+    } finally {
+      isActionPending.current = false;
+    }
+  };
+
   const askAgent = async () => {
-    if (!query.trim()) return;
+    if (!query.trim() || agentLoading) return;
     
     const userMessage = { role: 'user', text: query };
     setMessages(prev => [...prev, userMessage]);
@@ -61,7 +86,7 @@ const CRMDashboard = ({ showPipelineOnly = false }) => {
     setAgentLoading(true);
     
     try {
-      const res = await axios.post("http://localhost:5000/api/agent/query", { 
+      const res = await axios.post(`${API_BASE_URL}/agent/query`, { 
         query: currentQuery,
         history: messages
       });
@@ -94,15 +119,7 @@ const CRMDashboard = ({ showPipelineOnly = false }) => {
             <p className="subtitle text-muted-foreground font-medium">Real-time business analytics and AI forecasting</p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" size="sm" onClick={async () => {
-              try {
-                await seedDemoData();
-                fetchLeads();
-                toast.success("Environment seeded successfully.");
-              } catch (e) {
-                toast.error("Seeding parity error.");
-              }
-            }}>
+            <Button variant="outline" size="sm" onClick={handleSeedData} disabled={isActionPending.current}>
               Seed Sample Data
             </Button>
             <Button variant="outline" size="sm">

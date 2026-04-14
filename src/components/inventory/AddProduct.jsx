@@ -5,12 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { 
-  PackagePlus, 
   ArrowLeft, 
   Upload, 
   DollarSign, 
   Layers, 
-  AlertCircle,
   CheckCircle2,
   Image as ImageIcon,
   Tag

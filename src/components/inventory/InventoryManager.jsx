@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Link } from "react-router-dom";
+import { INVENTORY_API_BASE_URL } from "../../config";
+import { useDebounce } from "../../hooks/useDebounce";
 
 const InventoryManager = () => {
   const {
@@ -36,16 +38,17 @@ const InventoryManager = () => {
     importProducts,
   } = useProducts();
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const fileInputRef = useRef(null);
 
   const filteredProducts = useMemo(() => {
     return products.filter(
       (p) =>
-        (p.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-        (p.category?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
+        (p.name?.toLowerCase() || "").includes(debouncedSearchTerm.toLowerCase()) ||
+        (p.category?.toLowerCase() || "").includes(debouncedSearchTerm.toLowerCase()),
     );
-  }, [products, searchTerm]);
+  }, [products, debouncedSearchTerm]);
 
   const toggleSelect = (id) => {
     setSelectedProducts((prev) =>
@@ -75,7 +78,7 @@ const InventoryManager = () => {
 
   const handleExport = () => {
     window.open(
-      `http://localhost:5000/api/inventory/products/export`,
+      `${INVENTORY_API_BASE_URL}/products/export`,
       "_blank",
     );
   };

@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
+
 import { Button } from '../ui/Button';
 import { useDeals } from '../../contexts/DealContext';
-import { Kanban, LayoutDashboard, Target, History, DollarSign, ArrowRight, MoreVertical, Plus, Trophy, Clock } from 'lucide-react';
+import { DollarSign, MoreVertical, Trophy, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { toast } from 'sonner';
 
 const stages = ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won'];
 
 const DealManager = () => {
-  const { deals, loading, fetchDeals, updateDeal } = useDeals();
+  const { deals, fetchDeals, updateDeal } = useDeals();
   const [draggedDeal, setDraggedDeal] = useState(null);
 
   useEffect(() => {
@@ -28,7 +27,6 @@ const DealManager = () => {
     if (!draggedDeal || draggedDeal.stage === stage) return;
     
     // Optimistic UI update
-    const originalStage = draggedDeal.stage;
     updateDeal(draggedDeal.id, { stage });
     setDraggedDeal(null);
   };

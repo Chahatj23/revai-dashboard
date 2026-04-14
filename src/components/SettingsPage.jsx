@@ -8,13 +8,9 @@ import {
   ShieldCheck, 
   Database, 
   Cloud, 
-  Settings as SettingsIcon,
-  Bell,
-  Lock,
+  Lock, 
   Globe,
-  Save,
-  CheckCircle2,
-  XCircle
+  CheckCircle2
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 

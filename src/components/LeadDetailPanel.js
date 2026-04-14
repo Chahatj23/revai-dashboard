@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { submitFeedback } from '../services/api';
+import { API_BASE_URL } from '../config';
 
 const LeadDetailPanel = ({ lead, onClose, onEdit, onDeleteSuccess }) => {
   const [activeAction, setActiveAction] = useState(null);
@@ -25,7 +26,7 @@ const LeadDetailPanel = ({ lead, onClose, onEdit, onDeleteSuccess }) => {
   const generateEmail = async (tone) => {
     setEmailGenerating(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/agent/ask', {
+      const res = await axios.post(`${API_BASE_URL}/agent/ask`, {
         question: `Write a short ${tone} sales follow-up email for a lead named ${lead.name} from ${lead.company}. They are a ${lead.priority} priority lead with a ${lead.conversion_probability || 50}% conversion probability and potential deal size of $${lead.expected_deal_size?.toLocaleString() || '10,000'}. Their recommended action is: ${lead.next_action || 'Nurture'}. Write ONLY the email body, no subject line. Keep it under 100 words. Be direct and professional.`
       });
       const body = res.data?.answer || `Hi ${lead.name?.split(' ')[0]},\n\nI wanted to follow up on our conversation. I believe we can add significant value to ${lead.company}.\n\nWould you have time for a quick call this week?\n\nBest regards`;

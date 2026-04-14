@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
+import { Card, CardContent } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/Table';
 import { useLeads } from '../../contexts/LeadContext';
 import { useDeals } from '../../contexts/DealContext';
-import { Search, Plus, Filter, MoreHorizontal, ArrowUpRight, BadgeCheck, Zap, Globe, ShieldCheck, Mail, Phone, Trash2 } from 'lucide-react';
+import { Search, Plus, Filter, ArrowUpRight, BadgeCheck, Zap, Globe, ShieldCheck, Trash2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import LeadModal from '../LeadModal';
 import { toast } from 'sonner';
+import { useDebounce } from '../../hooks/useDebounce';
 
 const LeadManager = () => {
   const { orgId } = useParams();
   const navigate = useNavigate();
-  const { leads, loading, fetchLeads, updatePriority, deleteLead } = useLeads();
+  const { leads, loading, fetchLeads, deleteLead } = useLeads();
   const { addDeal } = useDeals();
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
 
@@ -25,8 +27,8 @@ const LeadManager = () => {
   }, [fetchLeads]);
 
   const filteredLeads = leads.filter(lead => 
-    lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.company.toLowerCase().includes(searchTerm.toLowerCase())
+    lead.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+    lead.company.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
 
   const handleConvertToDeal = async (lead) => {

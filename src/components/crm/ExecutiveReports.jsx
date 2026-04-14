@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, AreaChart, Area, FunnelChart, Funnel, LabelList
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, FunnelChart, Funnel, LabelList
 } from 'recharts';
-import { LayoutDashboard, TrendingUp, Target, Users, Zap, Calendar, Download, RefreshCw, BarChart3, PieChart as PieIcon, Activity } from 'lucide-react';
+import { TrendingUp, Target, Users, Zap, Download, RefreshCw, BarChart3, PieChart as PieIcon, Activity } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
+import { API_BASE_URL } from '../../config';
 
 const COLORS = ['#6366f1', '#a855f7', '#ec4899', '#f43f5e', '#ef4444'];
 
@@ -20,7 +21,7 @@ const ExecutiveReports = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/crm/summary', {
+      const res = await axios.get(`${API_BASE_URL}/crm/summary`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setData(res.data);

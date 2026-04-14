@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { inventoryApi } from '../services/inventoryApi';
 
@@ -6,79 +7,80 @@ const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
   const { currentUser, loading: authLoading } = useAuth();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
+  const [mutationError, setMutationError] = useState(null);
 
-  const refreshProducts = useCallback(async () => {
-    if (currentUser?.activeOrgId) {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await inventoryApi.getProducts();
-        setProducts(response.data);
-      } catch (err) {
-        setError(err.response?.data?.error || "Failed to load products.");
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setProducts([]);
-      setLoading(false);
-    }
-  }, [currentUser]);
+  const fetchProductsFn = async () => {
+    if (!currentUser?.activeOrgId) return [];
+    const response = await inventoryApi.getProducts();
+    return response.data;
+  };
 
-  useEffect(() => {
-    if (!authLoading) {
-      refreshProducts();
-    }
-  }, [currentUser, authLoading, refreshProducts]);
+  const { 
+    data: products = [], 
+    isLoading: queryLoading, 
+    error: queryError,
+    refetch: refreshProducts 
+  } = useQuery({
+    queryKey: ['products', currentUser?.activeOrgId],
+    queryFn: fetchProductsFn,
+    enabled: !!currentUser?.activeOrgId && !authLoading,
+  });
 
   const addProduct = async (productData) => {
+    setMutationError(null);
     try {
       const response = await inventoryApi.addProduct(productData);
-      await refreshProducts();
+      queryClient.invalidateQueries(['products', currentUser?.activeOrgId]);
       return response.data;
     } catch (e) {
+      setMutationError(e.response?.data?.error || e.message);
       throw e;
     }
   };
 
   const updateProduct = async (productId, productData) => {
+    setMutationError(null);
     try {
       const response = await inventoryApi.updateProduct(productId, productData);
-      await refreshProducts();
+      queryClient.invalidateQueries(['products', currentUser?.activeOrgId]);
       return response.data;
     } catch (e) {
+      setMutationError(e.response?.data?.error || e.message);
       throw e;
     }
   };
 
   const deleteProduct = async (productId) => {
+    setMutationError(null);
     try {
       await inventoryApi.deleteProduct(productId);
-      await refreshProducts();
+      queryClient.invalidateQueries(['products', currentUser?.activeOrgId]);
     } catch (e) {
+      setMutationError(e.response?.data?.error || e.message);
       throw e;
     }
   };
 
   const bulkDeleteProducts = async (productIds) => {
+    setMutationError(null);
     try {
       await inventoryApi.bulkDeleteProducts(productIds);
-      await refreshProducts();
+      queryClient.invalidateQueries(['products', currentUser?.activeOrgId]);
     } catch (e) {
+      setMutationError(e.response?.data?.error || e.message);
       throw e;
     }
   };
 
   const importProducts = async (productsData) => {
+    setMutationError(null);
     try {
       const response = await inventoryApi.importProducts(productsData);
-      await refreshProducts();
+      queryClient.invalidateQueries(['products', currentUser?.activeOrgId]);
       return response.data;
     } catch (e) {
+      setMutationError(e.response?.data?.error || e.message);
       throw e;
     }
   };
@@ -91,8 +93,8 @@ export const ProductProvider = ({ children }) => {
       deleteProduct, 
       bulkDeleteProducts,
       importProducts,
-      loading: loading || authLoading, 
-      error, 
+      loading: queryLoading || authLoading, 
+      error: mutationError || queryError?.message, 
       refreshProducts 
     }}>
       {children}

@@ -7,20 +7,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { 
-  Users, UserPlus, Search, Mail, Phone, MapPin, MoreVertical, 
-  Trash2, Edit, Download, Upload, ArrowUpDown, Filter, CheckCircle2, 
-  Calendar, Globe, BadgeCheck, ShieldCheck, History, ShoppingCart
+  UserPlus, Search, Mail, Phone, 
+  Trash2, Edit, Download, Upload, 
+  Globe, BadgeCheck, ShieldCheck, History, ShoppingCart
 } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../ui/Table';
-import { Skeleton } from '../ui/Skeleton';
+
 import { cn } from '../../lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/Dialog';
+import { useDebounce } from '../../hooks/useDebounce';
 
 const CustomerManager = () => {
   const { customers, loading, addCustomer, deleteCustomer, updateCustomer, deleteMultipleCustomers, importCustomers } = useCustomers();
   const { sales } = useOrders();
   
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -47,9 +49,9 @@ const CustomerManager = () => {
   };
 
   const filteredCustomers = customers.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.company.toLowerCase().includes(searchTerm.toLowerCase())
+    c.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+    c.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+    c.company.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
 
   const handleSubmit = async (e) => {
@@ -81,16 +83,7 @@ const CustomerManager = () => {
     setIsAdding(true);
   };
 
-  const handleBulkDelete = async () => {
-    if (!window.confirm(`Permanently decommission ${selectedCustomers.length} accounts?`)) return;
-    try {
-      await deleteMultipleCustomers(selectedCustomers);
-      toast.success(`Successfully deleted ${selectedCustomers.length} accounts.`);
-      setSelectedCustomers([]);
-    } catch (err) {
-      toast.error("Failed to execute bulk deletion.");
-    }
-  };
+
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -127,7 +120,7 @@ const CustomerManager = () => {
     e.target.value = '';
   };
 
-  const getCustomerSales = (id) => sales.filter(s => s.customerId === id);
+
 
   return (
     <div className="p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto">

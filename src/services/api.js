@@ -1,7 +1,9 @@
 import axios from "axios";
+import { API_BASE_URL } from "../config";
+import { applyDedupe } from "../lib/dedupe";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: API_BASE_URL,
 });
 
 API.interceptors.request.use((config) => {
@@ -11,6 +13,8 @@ API.interceptors.request.use((config) => {
   }
   return config;
 });
+
+applyDedupe(API);
 
 export const getLeads = () => API.get("/leads");
 export const getTasks = (status) => API.get("/tasks", { params: { status } });

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { inventoryApi } from '../services/inventoryApi';
 
@@ -6,89 +7,113 @@ const OrderContext = createContext();
 
 export const OrderProvider = ({ children }) => {
   const { currentUser, loading: authLoading } = useAuth();
-  const [sales, setSales] = useState([]);
-  const [purchases, setPurchases] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
+  const [mutationError, setMutationError] = useState(null);
 
-  const refreshOrders = useCallback(async () => {
-    if (currentUser?.activeOrgId) {
-      setLoading(true);
-      setError(null);
-      try {
-        const [salesRes, purchasesRes] = await Promise.all([
-          inventoryApi.getSaleOrders(),
-          inventoryApi.getPurchaseOrders()
-        ]);
-        setSales(salesRes.data);
-        setPurchases(purchasesRes.data);
-      } catch (err) {
-        console.error('Core: Order fetch failure:', err);
-        setError(err.response?.data?.error || "Failed to load orders.");
-      } finally {
-        setLoading(false);
-      }
-    }
-  }, [currentUser]);
+  const fetchSalesFn = async () => {
+    if (!currentUser?.activeOrgId) return [];
+    const response = await inventoryApi.getSaleOrders();
+    return response.data;
+  };
 
-  useEffect(() => {
-    if (!authLoading) {
-      refreshOrders();
-    }
-  }, [currentUser, authLoading, refreshOrders]);
+  const fetchPurchasesFn = async () => {
+    if (!currentUser?.activeOrgId) return [];
+    const response = await inventoryApi.getPurchaseOrders();
+    return response.data;
+  };
+
+  const { 
+    data: sales = [], 
+    isLoading: salesLoading, 
+    error: salesError,
+    refetch: refreshSales 
+  } = useQuery({
+    queryKey: ['orders', 'sales', currentUser?.activeOrgId],
+    queryFn: fetchSalesFn,
+    enabled: !!currentUser?.activeOrgId && !authLoading,
+  });
+
+  const { 
+    data: purchases = [], 
+    isLoading: purchasesLoading, 
+    error: purchasesError,
+    refetch: refreshPurchases 
+  } = useQuery({
+    queryKey: ['orders', 'purchases', currentUser?.activeOrgId],
+    queryFn: fetchPurchasesFn,
+    enabled: !!currentUser?.activeOrgId && !authLoading,
+  });
+
+  const refreshOrders = async () => {
+    await Promise.all([refreshSales(), refreshPurchases()]);
+  };
 
   const addSaleOrder = async (orderData) => {
+    setMutationError(null);
     try {
       const res = await inventoryApi.addSaleOrder(orderData);
-      await refreshOrders();
+      queryClient.invalidateQueries(['orders', 'sales', currentUser?.activeOrgId]);
       return res.data;
     } catch (err) {
-      throw new Error(err.response?.data?.error || "Sale order creation failed.");
+      const msg = err.response?.data?.error || "Sale order creation failed.";
+      setMutationError(msg);
+      throw new Error(msg);
     }
   };
 
   const addPurchaseOrder = async (orderData) => {
+    setMutationError(null);
     try {
       const res = await inventoryApi.addPurchaseOrder(orderData);
-      await refreshOrders();
+      queryClient.invalidateQueries(['orders', 'purchases', currentUser?.activeOrgId]);
       return res.data;
     } catch (err) {
-      throw new Error(err.response?.data?.error || "Purchase order creation failed.");
+      const msg = err.response?.data?.error || "Purchase order creation failed.";
+      setMutationError(msg);
+      throw new Error(msg);
     }
   };
 
   const updateSaleOrder = async (id, data) => {
+    setMutationError(null);
     try {
       await inventoryApi.updateSaleOrder(id, data);
-      await refreshOrders();
+      queryClient.invalidateQueries(['orders', 'sales', currentUser?.activeOrgId]);
     } catch(err) {
+      setMutationError("Update failed.");
       throw new Error("Update failed.");
     }
   };
 
   const deleteSaleOrders = async (ids) => {
+    setMutationError(null);
     try {
       await inventoryApi.bulkDeleteSaleOrders(ids);
-      await refreshOrders();
+      queryClient.invalidateQueries(['orders', 'sales', currentUser?.activeOrgId]);
     } catch(err) {
+      setMutationError("Delete failed.");
       throw new Error("Delete failed.");
     }
   };
 
   const updatePurchaseOrder = async (id, data) => {
+    setMutationError(null);
     try {
       await inventoryApi.updatePurchaseOrder(id, data);
-      await refreshOrders();
+      queryClient.invalidateQueries(['orders', 'purchases', currentUser?.activeOrgId]);
     } catch(err) {
+      setMutationError("Update failed.");
       throw new Error("Update failed.");
     }
   };
 
   const deletePurchaseOrders = async (ids) => {
+    setMutationError(null);
     try {
       await inventoryApi.bulkDeletePurchaseOrders(ids);
-      await refreshOrders();
+      queryClient.invalidateQueries(['orders', 'purchases', currentUser?.activeOrgId]);
     } catch(err) {
+      setMutationError("Delete failed.");
       throw new Error("Delete failed.");
     }
   };
@@ -104,8 +129,8 @@ export const OrderProvider = ({ children }) => {
       deleteSaleOrders,
       updatePurchaseOrder,
       deletePurchaseOrders,
-      loading: loading || authLoading, 
-      error, 
+      loading: salesLoading || purchasesLoading || authLoading, 
+      error: mutationError || salesError?.message || purchasesError?.message, 
       refreshOrders 
     }}>
       {children}

@@ -1,9 +1,12 @@
 import axios from "axios";
+import { INTEGRATIONS_API_BASE_URL } from "../config";
+import { applyDedupe } from "../lib/dedupe";
 
-const API_BASE_URL = "http://localhost:5000/api/integrations";
+const api = axios.create({
+  baseURL: INTEGRATIONS_API_BASE_URL,
+});
 
-// Set withCredentials if using cookies, otherwise use headers
-axios.interceptors.request.use(config => {
+api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -11,14 +14,16 @@ axios.interceptors.request.use(config => {
   return config;
 });
 
+applyDedupe(api);
+
 export const integrationApi = {
-  getIntegrations: () => axios.get(API_BASE_URL),
-  updateIntegration: (id, data) => axios.put(`${API_BASE_URL}/${id}`, data),
-  syncIntegration: (id) => axios.post(`${API_BASE_URL}/${id}/sync`),
+  getIntegrations: () => api.get(""),
+  updateIntegration: (id, data) => api.put(`${id}`, data),
+  syncIntegration: (id) => api.post(`${id}/sync`),
   getSalesforceAuthUrl: (clientId, clientSecret) => {
     const params = new URLSearchParams();
     if (clientId) params.append('clientId', clientId);
     if (clientSecret) params.append('clientSecret', clientSecret);
-    return axios.get(`${API_BASE_URL}/salesforce/auth?${params.toString()}`);
+    return api.get(`/salesforce/auth?${params.toString()}`);
   },
 };
