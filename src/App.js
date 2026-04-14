@@ -149,8 +149,8 @@ function Sidebar() {
             !isOpen && "justify-center w-full",
           )}
         >
-          <div className="w-10 h-10 shrink-0 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-            <span className="text-xl">🚀</span>
+          <div className="w-10 h-10 shrink-0 bg-white/5 rounded-xl flex items-center justify-center border border-white/10 shadow-lg overflow-hidden">
+            <img src="/favicon.png" alt="RevAI Logo" className="w-full h-full object-cover" />
           </div>
           {isOpen && (
             <div className="animate-in fade-in duration-300 whitespace-nowrap overflow-hidden">

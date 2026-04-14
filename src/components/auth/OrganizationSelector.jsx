@@ -37,8 +37,8 @@ const OrganizationSelector = () => {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-xl animate-in fade-in duration-500">
       <div className="w-full max-w-xl p-6 space-y-8 animate-in zoom-in-95 duration-500">
         <div className="text-center space-y-2">
-          <div className="inline-flex p-4 rounded-3xl bg-primary/10 text-primary mb-4 shadow-2xl shadow-primary/20">
-            <Building2 size={40} />
+          <div className="inline-flex w-20 h-20 rounded-3xl bg-white/5 border border-white/10 p-0 overflow-hidden mb-4 shadow-2xl shadow-primary/20 items-center justify-center">
+            <img src="/favicon.png" alt="RevAI Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-4xl font-extrabold tracking-tighter text-white">
             {isRegistering ? 'New Workspace' : 'Select Workspace'}

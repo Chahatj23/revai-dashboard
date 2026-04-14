@@ -46,8 +46,8 @@ const LoginPage = () => {
         <div className="absolute -bottom-1/4 -right-1/4 w-full h-full bg-blue-500/10 rounded-full blur-[160px]" />
         
         <div className="relative z-10 flex items-center gap-4">
-          <div className="w-14 h-14 bg-white/5 backdrop-blur-3xl rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl">
-            <span className="text-3xl">🚀</span>
+          <div className="w-14 h-14 bg-white/5 backdrop-blur-3xl rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl overflow-hidden">
+            <img src="/favicon.png" alt="RevAI Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-4xl font-black tracking-tighter text-white">RevAI Studio</h1>
