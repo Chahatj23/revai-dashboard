@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "name": "revai-dashboard",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
+    }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "env": {
+    "REACT_APP_API_URL": "https://revai-dashboard-backend.onrender.com/api",
+    "CI": "false"
+  }
+}
