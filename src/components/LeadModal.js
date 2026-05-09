@@ -40,8 +40,6 @@ const LeadModal = ({ isOpen, onClose, onSave, existingLead }) => {
       onClose();
     } catch (err) {
       console.error(err);
-      const { toast } = require("sonner");
-      toast.error("Lead scoring engine parity error. Please retry.");
     } finally {
       setLoading(false);
     }

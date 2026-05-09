@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { getTasks, createTask, updateTask, deleteTask } from "../services/api";
 
 const TodayTasks = () => {
@@ -9,7 +9,11 @@ const TodayTasks = () => {
   const [newSubject, setNewSubject] = useState("");
   const [newPriority, setNewPriority] = useState("Normal");
 
-  const fetchTasks = useCallback(async () => {
+  useEffect(() => {
+    fetchTasks();
+  }, [activeFilter]);
+
+  const fetchTasks = async () => {
     try {
       setLoading(true);
       const res = await getTasks(activeFilter);
@@ -19,11 +23,7 @@ const TodayTasks = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeFilter]);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
